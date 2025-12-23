@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>简易转盘抽奖</title>
+
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  margin-top: 50px;
+}
+#wheel-box {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: auto;
+}
+#wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 6px solid #333;
+  background: conic-gradient(
+    #ff7675 0deg 90deg,
+    #74b9ff 90deg 180deg,
+    #55efc4 180deg 270deg,
+    #ffeaa7 270deg 360deg
+  );
+  transition: transform 4s ease-out;
+}
+#pointer {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 30px;
+}
+button {
+  margin-top: 30px;
+  padding: 10px 30px;
+  font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🎡 转盘抽奖</h2>
+
+<div id="wheel-box">
+  <div id="pointer">▼</div>
+  <div id="wheel"></div>
+</div>
+
+<button id="spinBtn">开始抽奖</button>
+
+<script>
+const prizes = ["一等奖", "二等奖", "三等奖", "谢谢参与"];
+let rotating = false;
+let currentAngle = 0;
+
+const wheel = document.getElementById("wheel");
+const btn = document.getElementById("spinBtn");
+
+btn.addEventListener("click", function () {
+  if (rotating) return;
+  rotating = true;
+
+  const index = Math.floor(Math.random() * prizes.length);
+  const slice = 360 / prizes.length;
+  const angle = 360 * 6 + (360 - index * slice - slice / 2);
+  currentAngle += angle;
+
+  wheel.style.transform = `rotate(${currentAngle}deg)`;
+
+  setTimeout(() => {
+    alert("🎉 你抽中了：" + prizes[index]);
+    rotating = false;
+  }, 4000);
+});
+</script>
+
+</body>
+</html>
+
+
