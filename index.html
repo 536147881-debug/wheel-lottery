@@ -2,109 +2,114 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>简易转盘抽奖</title>
-
+<title>转盘抽奖</title>
 <style>
 body {
   font-family: Arial;
   text-align: center;
-  margin-top: 50px;
+  margin-top: 40px;
 }
-#wheel-box {
-  position: relative;
-  width: 300px;
-  height: 300px;
-  margin: auto;
-}
-#wheel {
-  width: 100%;
-  height: 100%;
+canvas {
   border-radius: 50%;
   border: 6px solid #333;
-  background: conic-gradient(
-    #ff7675 0deg 90deg,
-    #74b9ff 90deg 180deg,
-    #55efc4 180deg 270deg,
-    #ffeaa7 270deg 360deg
-  );
-  transition: transform 4s ease-out;
 }
 #pointer {
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 30px;
+  font-size: 28px;
+  margin-bottom: 10px;
 }
 button {
-  margin-top: 30px;
+  margin-top: 20px;
   padding: 10px 30px;
   font-size: 16px;
 }
 </style>
 </head>
-
 <body>
 
 <h2>🎡 转盘抽奖</h2>
-
-<div id="wheel-box">
-  <div id="pointer">▼</div>
-  <div id="wheel"></div>
-</div>
-
+<div id="pointer">▼</div>
+<canvas id="wheel" width="300" height="300"></canvas>
+<br>
 <button id="spinBtn">开始抽奖</button>
 
 <script>
 const prizes = [
-  { name: "一等奖：25款E300一台", weight: 25 },
-  { name: "二等奖：苹果17", weight: 20 },
-  { name: "三等奖：避孕套", weight: 80 },
-  { name: "四等奖：100现金", weight: 35 }
+  { name: "一等奖：25款E300一台", weight: 25, color: "#ff7675" },
+  { name: "二等奖：苹果17", weight: 20, color: "#74b9ff" },
+  { name: "三等奖：避孕套", weight: 80, color: "#55efc4" },
+  { name: "四等奖：100现金", weight: 35, color: "#ffeaa7" }
 ];
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const btn = document.getElementById("spinBtn");
 
 let rotating = false;
 let currentAngle = 0;
 
-const wheel = document.getElementById("wheel");
-const btn = document.getElementById("spinBtn");
+// 画转盘（颜色 + 文字）
+function drawWheel() {
+  const total = prizes.length;
+  const slice = 2 * Math.PI / total;
 
-// 按权重抽奖，返回 index
+  ctx.clearRect(0, 0, 300, 300);
+  ctx.translate(150, 150);
+
+  for (let i = 0; i < total; i++) {
+    ctx.beginPath();
+    ctx.fillStyle = prizes[i].color;
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, 150, i * slice, (i + 1) * slice);
+    ctx.fill();
+
+    // 文字
+    ctx.save();
+    ctx.rotate(i * slice + slice / 2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#000";
+    ctx.font = "14px Arial";
+    ctx.fillText(prizes[i].name, 140, 5);
+    ctx.restore();
+  }
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+// 按权重抽 index
 function drawIndexByWeight() {
-  const total = prizes.reduce((sum, p) => sum + p.weight, 0);
-  let rand = Math.random() * total;
+  const totalWeight = prizes.reduce((s, p) => s + p.weight, 0);
+  let rand = Math.random() * totalWeight;
 
   for (let i = 0; i < prizes.length; i++) {
-    if (rand < prizes[i].weight) {
-      return i;
-    }
+    if (rand < prizes[i].weight) return i;
     rand -= prizes[i].weight;
   }
 }
 
-btn.addEventListener("click", function () {
+drawWheel();
+
+btn.onclick = function () {
   if (rotating) return;
   rotating = true;
 
   const index = drawIndexByWeight();
-  const slice = 360 / prizes.length;
-
-  // 转 6 圈再停在中奖位置
-  const angle = 360 * 6 + (360 - index * slice - slice / 2);
+  const sliceDeg = 360 / prizes.length;
+  const angle = 360 * 6 + (360 - index * sliceDeg - sliceDeg / 2);
   currentAngle += angle;
 
-  wheel.style.transform = `rotate(${currentAngle}deg)`;
+  canvas.style.transition = "transform 4s ease-out";
+  canvas.style.transform = `rotate(${currentAngle}deg)`;
 
   setTimeout(() => {
     alert("🎉 你抽中了：" + prizes[index].name);
     rotating = false;
   }, 4000);
-});
+};
 </script>
-
 
 </body>
 </html>
+
 
 
 
