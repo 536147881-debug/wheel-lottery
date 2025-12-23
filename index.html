@@ -56,7 +56,12 @@ button {
 <button id="spinBtn">开始抽奖</button>
 
 <script>
-const prizes = ["一等奖", "二等奖", "三等奖", "谢谢参与"];
+const prizes = [
+  { name: "一等奖：25款E300一台", weight: 25 },
+  { name: "二等奖：苹果17", weight: 20 },
+  { name: "三等奖：避孕套", weight: 80 },
+  { name: "四等奖：100现金", weight: 35 }
+];
 let rotating = false;
 let currentAngle = 0;
 
@@ -83,5 +88,6 @@ btn.addEventListener("click", function () {
 
 </body>
 </html>
+
 
 
