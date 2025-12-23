@@ -94,8 +94,8 @@ btn.onclick = function () {
 
   const index = drawIndexByWeight();
   const sliceDeg = 360 / prizes.length;
-  const angle = 360 * 6 + (360 - index * sliceDeg - sliceDeg / 2);
-  currentAngle += angle;
+
+  currentAngle += 360 * 6 + index * sliceDeg;
 
   canvas.style.transition = "transform 4s ease-out";
   canvas.style.transform = `rotate(${currentAngle}deg)`;
@@ -109,6 +109,7 @@ btn.onclick = function () {
 
 </body>
 </html>
+
 
 
 
