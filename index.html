@@ -46,12 +46,13 @@ const btn = document.getElementById("spinBtn");
 
 const size = 300;
 const center = size / 2;
-const slice = 2 * Math.PI / prizes.length;
+const sliceDeg = 360 / prizes.length;
+const sliceRad = 2 * Math.PI / prizes.length;
 
-let rotating = false;
 let currentAngle = 0;
+let rotating = false;
 
-// ===== 画转盘（0号奖项正对指针）=====
+/* ===== 画转盘（0号奖项在正上方）===== */
 function drawWheel() {
   ctx.clearRect(0, 0, size, size);
   ctx.save();
@@ -61,15 +62,20 @@ function drawWheel() {
     ctx.beginPath();
     ctx.fillStyle = prizes[i].color;
     ctx.moveTo(0, 0);
-    ctx.arc(0, 0, center, i * slice - Math.PI / 2, (i + 1) * slice - Math.PI / 2);
+    ctx.arc(
+      0,
+      0,
+      center,
+      i * sliceRad - Math.PI / 2,
+      (i + 1) * sliceRad - Math.PI / 2
+    );
     ctx.fill();
 
-    // 文字
     ctx.save();
-    ctx.rotate(i * slice + slice / 2 - Math.PI / 2);
+    ctx.rotate(i * sliceRad + sliceRad / 2 - Math.PI / 2);
     ctx.textAlign = "right";
-    ctx.fillStyle = "#000";
     ctx.font = "14px Arial";
+    ctx.fillStyle = "#000";
     ctx.fillText(prizes[i].name, center - 10, 5);
     ctx.restore();
   }
@@ -77,46 +83,46 @@ function drawWheel() {
   ctx.restore();
 }
 
-// ===== 按权重生成一个【最终角度】=====
-function getTargetAngleByWeight() {
+/* ===== 按权重随机一个“目标角度” ===== */
+function getWeightedTargetAngle() {
   const total = prizes.reduce((s, p) => s + p.weight, 0);
-  let rand = Math.random() * total;
+  let r = Math.random() * total;
 
   let index = 0;
   for (let i = 0; i < prizes.length; i++) {
-    if (rand < prizes[i].weight) {
+    if (r < prizes[i].weight) {
       index = i;
       break;
     }
-    rand -= prizes[i].weight;
+    r -= prizes[i].weight;
   }
 
-  // 在该奖项扇区内随机一个角度（避免总是正中）
-  const startDeg = index * (360 / prizes.length);
-  const randomOffset = Math.random() * (360 / prizes.length);
+  // 在该奖项扇区内随机
+  const offset = Math.random() * sliceDeg;
+  return index * sliceDeg + offset;
+}
 
-  return {
-    index,
-    angle: startDeg + randomOffset
-  };
+/* ===== 根据最终角度反算中奖 index（核心）===== */
+function getIndexFromAngle(angle) {
+  const normalized = (360 - (angle % 360) + sliceDeg / 2) % 360;
+  return Math.floor(normalized / sliceDeg);
 }
 
 drawWheel();
 
-// ===== 点击抽奖 =====
-btn.onclick = function () {
+btn.onclick = () => {
   if (rotating) return;
   rotating = true;
 
-  const { index, angle } = getTargetAngleByWeight();
-
-  const rotateDeg = 360 * 6 + (360 - angle);
+  const targetAngle = getWeightedTargetAngle();
+  const rotateDeg = 360 * 6 + targetAngle;
   currentAngle += rotateDeg;
 
   canvas.style.transition = "transform 4s ease-out";
   canvas.style.transform = `rotate(${currentAngle}deg)`;
 
   setTimeout(() => {
+    const index = getIndexFromAngle(currentAngle);
     alert("🎉 你抽中了：" + prizes[index].name);
     rotating = false;
   }, 4000);
@@ -125,6 +131,7 @@ btn.onclick = function () {
 
 </body>
 </html>
+
 
 
 
