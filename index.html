@@ -2,11 +2,11 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>转盘抽奖</title>
+<title>转盘抽奖（零误差版）</title>
 <style>
 body {
-  text-align: center;
   font-family: Arial;
+  text-align: center;
   margin-top: 40px;
 }
 #wrapper {
@@ -20,10 +20,11 @@ canvas {
 }
 #pointer {
   position: absolute;
-  top: -8px;
+  top: -10px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 28px;
+  z-index: 10;
 }
 button {
   margin-top: 25px;
@@ -35,7 +36,7 @@ button {
 
 <body>
 
-<h2>🎡 转盘抽奖</h2>
+<h2>🎡 转盘抽奖（零误差）</h2>
 
 <div id="wrapper">
   <div id="pointer">▼</div>
@@ -59,19 +60,18 @@ const btn = document.getElementById("spinBtn");
 
 const size = 300;
 const center = size / 2;
-const sliceRad = (2 * Math.PI) / prizes.length;
 const sliceDeg = 360 / prizes.length;
+const sliceRad = (2 * Math.PI) / prizes.length;
 
-let rotating = false;
+let spinning = false;
 
-/* ===== 画转盘（永远不转）===== */
+/* ===== 画转盘（固定不动）===== */
 function drawWheel() {
   ctx.clearRect(0, 0, size, size);
   ctx.save();
   ctx.translate(center, center);
 
   for (let i = 0; i < prizes.length; i++) {
-    // 扇区
     ctx.beginPath();
     ctx.fillStyle = prizes[i].color;
     ctx.moveTo(0, 0);
@@ -84,7 +84,6 @@ function drawWheel() {
     );
     ctx.fill();
 
-    // 文字
     ctx.save();
     ctx.rotate(i * sliceRad + sliceRad / 2 - Math.PI / 2);
     ctx.textAlign = "right";
@@ -97,8 +96,8 @@ function drawWheel() {
   ctx.restore();
 }
 
-/* ===== 按权重抽奖（只算 index）===== */
-function drawByWeight() {
+/* ===== 按权重抽 index（唯一的结果来源）===== */
+function drawIndexByWeight() {
   const total = prizes.reduce((s, p) => s + p.weight, 0);
   let r = Math.random() * total;
 
@@ -113,25 +112,29 @@ drawWheel();
 
 /* ===== 点击抽奖 ===== */
 btn.onclick = () => {
-  if (rotating) return;
-  rotating = true;
+  if (spinning) return;
+  spinning = true;
 
-  const index = drawByWeight();
+  const index = drawIndexByWeight();
 
-  // 指针旋转（不是转盘）
-  const targetDeg =
-    360 * 6 + index * sliceDeg + sliceDeg / 2;
+  // ❗ 关键：直接算“这个 index 的中心角度”
+  const targetAngle =
+    360 * 5 - (index * sliceDeg + sliceDeg / 2);
 
-  btn.style.pointerEvents = "none";
-  document.getElementById("pointer").style.transition =
-    "transform 4s ease-out";
-  document.getElementById("pointer").style.transform =
-    `translateX(-50%) rotate(${targetDeg}deg)`;
+  // 每次都从 0 开始转，杜绝累计误差
+  canvas.style.transition = "none";
+  canvas.style.transform = "rotate(0deg)";
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      canvas.style.transition = "transform 4s ease-out";
+      canvas.style.transform = `rotate(${targetAngle}deg)`;
+    });
+  });
 
   setTimeout(() => {
     alert("🎉 你抽中了：" + prizes[index].name);
-    rotating = false;
-    btn.style.pointerEvents = "auto";
+    spinning = false;
   }, 4000);
 };
 </script>
